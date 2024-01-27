@@ -3,7 +3,7 @@ package com.example.application.appyamlhandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.annotation.PostConstruct;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,30 +12,29 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Service
 public class AppYamlHandler {
 
+    private Map<String, Object> yamlMap;
 
     @PostConstruct
-    public void init(){
-
-        Map<String, Object> yamlMap = AppYamlHandler.readYamlFromRessources("application.yml");
+    public void init() {
+        yamlMap = readYamlFromRessources("application.yml");
         //Get a Parameter by path
-        var dburl = AppYamlHandler.getValueByPath(yamlMap, "spring.datasource.url");
+        var dburl = getValueByPath("spring.datasource.url");
 
         //Simple add of a parameter
         yamlMap.put("timestamp", LocalDateTime.now().toString());
 
         //Set a parameter
-        AppYamlHandler.setValueByPath(yamlMap, "spring.datasource.url", "test");
+        //setValueByPath("spring.datasource.url", "test");
 
         //Write application.yml
-        writeMapToYamlinRessources(yamlMap, "application.yml");
-
+        //writeMapToYamlinRessources("application.yml");
     }
 
 
-    public static Map<String, Object> readYamlFromRessources(String file) {
+    private Map<String, Object> readYamlFromRessources(String file) {
         InputStream inputStream = AppYamlHandler.class.getClassLoader().getResourceAsStream(file);
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         try {
@@ -47,9 +46,9 @@ public class AppYamlHandler {
     }
 
 
-    private static Object getValueByPath(Map<String, Object> map, String path) {
+    private Object getValueByPath(String path) {
         String[] p = path.split("\\.");
-        Map<String, Object> currentMap = map;
+        Map<String, Object> currentMap = yamlMap;
         for (String key : p) {
             if (currentMap.containsKey(key)) {
                 Object obj = currentMap.get(key);
@@ -65,9 +64,9 @@ public class AppYamlHandler {
         return null;
     }
 
-    private static void setValueByPath(Map<String, Object> map, String path, Object value) {
+    public void setValueByPath(String path, Object value) {
         String[] p = path.split("\\.");
-        Map<String, Object> currentMap = map;
+        Map<String, Object> currentMap = yamlMap;
         for (int i = 0; i < p.length; i++) {
             String key = p[i];
             if (i == p.length - 1) {
@@ -81,13 +80,13 @@ public class AppYamlHandler {
         }
     }
 
-
-    public static void writeMapToYamlinRessources(Map<String, Object> map, String fileName) {
+    public void writeMapToYamlinRessources() {
+        String fileName = "application.yml";
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         try {
             String resourcesPath = AppYamlHandler.class.getResource("/").getPath();
             String filePath = resourcesPath + fileName;
-            objectMapper.writeValue(new File(filePath), map);
+            objectMapper.writeValue(new File(filePath), yamlMap);
         } catch (IOException e) {
             e.printStackTrace();
         }

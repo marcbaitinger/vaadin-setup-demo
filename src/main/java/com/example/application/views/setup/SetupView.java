@@ -1,5 +1,6 @@
 package com.example.application.views.setup;
 
+import com.example.application.appyamlhandler.AppYamlHandler;
 import com.example.application.condition.SetupNotFinishedCondition;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -16,17 +17,21 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
+
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
 @Route(value = "")
 @Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
-    RadioButtonGroup<String> dbms;
-    TextField                username, dbmsURL, dbmsUsername;
-    PasswordField            pwd, pwdRepeat, dbmsPwd;
-    Button                   dbmsTest;
+    @Autowired
+    private  AppYamlHandler         appYamlHandler;
+    private RadioButtonGroup<String> dbms;
+    private TextField                username, dbmsURL, dbmsUsername;
+    private PasswordField            pwd, pwdRepeat, dbmsPwd;
+    private Button                   dbmsTest, dbmsSaveConfig;
 
     public SetupView() {
         H2 title   = new H2("SAPL Server CE First-Time Boot Wizard");
@@ -58,7 +63,6 @@ public class SetupView extends VerticalLayout {
         formLayout.setColspan(help, 2);
 
         add(formLayout);
-
     }
 
     private Component createAdminUserLayout() {
@@ -85,26 +89,36 @@ public class SetupView extends VerticalLayout {
         dbms.setItems("H2", "MariaDB");
         dbms.addValueChangeListener(e -> setDbmsConnStringDefault());
         dbmsURL = new TextField("DBMS URL");
+        dbmsURL.setRequiredIndicatorVisible(true);
+        dbmsURL.setClearButtonVisible(true);
         dbmsURL.setVisible(false);
         dbmsUsername = new TextField("DBMS Username");
+        dbmsUsername.setRequiredIndicatorVisible(true);
+        dbmsUsername.setClearButtonVisible(true);
         dbmsUsername.setVisible(false);
         dbmsPwd = new PasswordField("DBMS Password");
+        dbmsPwd.setRequiredIndicatorVisible(true);
+        dbmsPwd.setClearButtonVisible(true);
         dbmsPwd.setVisible(false);
         dbmsTest = new Button("Test DBMS-Connection");
         dbmsTest.setVisible(false);
-
+        dbmsSaveConfig = new Button("Save DBMS-Configuration");
+        dbmsSaveConfig.setVisible(false);
+        dbmsSaveConfig.addClickListener(e -> {
+            writeDbmsConfigToApplicationYml();
+        });
         Span dbmsErrorMessage = new Span();
         dbmsErrorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
         dbmsErrorMessage.getStyle().set("padding", "var(--lumo-space-tall-l)");
 
-        FormLayout dbmsLayout = new FormLayout(dbms, dbmsURL, dbmsUsername, dbmsPwd, dbmsErrorMessage, dbmsTest);
+        FormLayout dbmsLayout = new FormLayout(dbms, dbmsURL, dbmsUsername, dbmsPwd, dbmsErrorMessage, dbmsTest, dbmsSaveConfig);
         dbmsLayout.setColspan(dbms, 2);
         dbmsLayout.setColspan(dbmsURL, 2);
+        dbmsLayout.setColspan(dbmsSaveConfig, 2);
         dbmsLayout.setColspan(dbmsTest, 2);
         dbmsLayout.setColspan(dbmsErrorMessage, 2);
 
         return dbmsLayout;
-
     }
 
     private void setDbmsConnStringDefault() {
@@ -120,7 +134,26 @@ public class SetupView extends VerticalLayout {
         dbmsURL.setVisible(true);
         dbmsUsername.setVisible(true);
         dbmsPwd.setVisible(true);
+        dbmsSaveConfig.setVisible(true);
+        dbmsSaveConfig.setEnabled(true);
     }
 
+    private void writeDbmsConfigToApplicationYml() {
+        String driverClassName = "";
+        switch (dbms.getValue()) {
+            case "H2":
+                driverClassName = "org.h2.Driver";
+                break;
+            case "MariaDB":
+                break;
+            default:
+        }
 
+        appYamlHandler.setValueByPath("spring.datasource.driverClassName", driverClassName);
+        appYamlHandler.setValueByPath("spring.datasource.url", "jdbc:h2:" + dbmsURL.getValue());
+        appYamlHandler.setValueByPath("spring.datasource.username", dbmsUsername.getValue());
+        appYamlHandler.setValueByPath("spring.datasource.password", dbmsPwd.getValue());
+        appYamlHandler.writeMapToYamlinRessources();
+        System.out.println("Write application yml file");
+    }
 }
