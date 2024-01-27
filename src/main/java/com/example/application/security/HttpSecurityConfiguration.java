@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 @Configuration
 @EnableWebSecurity
-@Conditional(SetupFinishedCondition.class)
 public class HttpSecurityConfiguration extends VaadinWebSecurity {
 
     @Override

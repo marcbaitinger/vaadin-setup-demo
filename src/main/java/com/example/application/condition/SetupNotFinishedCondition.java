@@ -8,7 +8,6 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 public class SetupNotFinishedCondition implements Condition{
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        //return false;
         return context.getEnvironment().getProperty("spring.datasource.url","").isEmpty();
     }
 }
