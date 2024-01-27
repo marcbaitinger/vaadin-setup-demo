@@ -2,10 +2,17 @@ vaadin:
     launch-browser: 'true'
     whitelisted-packages: com.vaadin,org.vaadin,dev.hilla,com.example.application
 spring:
+    devtools:
+      restart:
+          enabled: false
     mustache:
         check-template-location: 'false'
     jpa:
         defer-datasource-initialization: 'true'
+    datasource:
+        url: jdbc:mariadb://localhost:3306/saplserverce
+        username: root
+        password: root
 logging:
     level:
         org:

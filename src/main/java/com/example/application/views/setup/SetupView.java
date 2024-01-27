@@ -1,5 +1,6 @@
 package com.example.application.views.setup;
 
+import com.example.application.condition.SetupNotFinishedCondition;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
@@ -15,10 +16,12 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.springframework.context.annotation.Conditional;
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
-@Route(value = "/setup")
+@Route(value = "")
+@Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
     RadioButtonGroup<String> dbms;
     TextField                username, dbmsURL, dbmsUsername;
