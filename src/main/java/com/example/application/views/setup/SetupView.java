@@ -6,11 +6,14 @@ import com.example.application.condition.SetupNotFinishedCondition;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -40,9 +43,10 @@ public class SetupView extends VerticalLayout {
         H6 welcome = new H6("Welcome to SAPL Server CE. Finish the following steps to setup the SAPL Server CE");
 
         Accordion      accordion      = new Accordion();
+        accordion.add("Setup your DBMS", createDbmsLayout());
+        accordion.add("TLS Configuration", createTLSLayout());
         accordion.add("Set username and password for the admin-user",
                 createAdminUserLayout());
-        accordion.add("Setup your DBMS", createDbmsLayout());
         accordion.getStyle().setMargin("50px 0");
 
         Anchor help = new Anchor("https://github.com/heutelbeck/sapl-server",
@@ -123,6 +127,51 @@ public class SetupView extends VerticalLayout {
         return dbmsLayout;
     }
 
+    private Component createTLSLayout() {
+        ListBox<String> listBox = new ListBox<>();
+        listBox.setItems("TLSv1.3", "TLSv1.3 + TLSv1.2");
+        listBox.setValue("TLSv1.3");
+
+        CheckboxGroup<String> checkboxGroup = new CheckboxGroup<>();
+        checkboxGroup.setLabel("TLS ciphers");
+        checkboxGroup.setItems("TLS_AES_128_GCM_SHA256",
+                "TLS_AES_256_GCM_SHA384",
+                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+                "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+                "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+                "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+                "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
+                "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
+                "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
+                "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+                "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+                "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+                "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+                "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+                "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+                "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+                "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256");
+
+        checkboxGroup.select("TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384");
+        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        add(checkboxGroup);
+
+        Button tlsSaveConfig = new Button("Save TLS Configuration");
+        tlsSaveConfig.addClickListener(e -> {
+            writeTlsConfigToApplicationYml();
+        });
+
+        //TODO keystore configuration (type, path, password, alias)
+
+        FormLayout tlsLayout = new FormLayout(listBox, checkboxGroup, tlsSaveConfig);
+        tlsLayout.setColspan(listBox, 2);
+        tlsLayout.setColspan(checkboxGroup, 2);
+        tlsLayout.setColspan(tlsSaveConfig, 2);
+
+        return tlsLayout;
+    }
+
     private void setDbmsConnStringDefault() {
         switch (dbms.getValue()) {
             case "H2":
@@ -160,5 +209,9 @@ public class SetupView extends VerticalLayout {
 
         System.out.println("Restart the application");
         Application.restart();
+    }
+
+    private void writeTlsConfigToApplicationYml() {
+        System.out.println("Needs to be implemented: Write tls config to application.yml");
     }
 }
