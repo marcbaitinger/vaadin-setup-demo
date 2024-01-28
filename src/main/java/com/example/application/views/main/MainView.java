@@ -13,7 +13,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.context.annotation.Conditional;
 
 @PageTitle("Main")
-@Route(value = "")
+@Route(value = "/main")
 @Conditional(SetupFinishedCondition.class)
 @AnonymousAllowed
 public class MainView extends HorizontalLayout {

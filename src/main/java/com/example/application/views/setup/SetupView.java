@@ -1,5 +1,6 @@
 package com.example.application.views.setup;
 
+import com.example.application.Application;
 import com.example.application.appyamlhandler.AppYamlHandler;
 import com.example.application.condition.SetupNotFinishedCondition;
 import com.vaadin.flow.component.Component;
@@ -18,12 +19,13 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.context.annotation.Conditional;
 
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
-@Route(value = "")
+@Route(value = "/setup")
 @Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
     @Autowired
@@ -155,5 +157,8 @@ public class SetupView extends VerticalLayout {
         appYamlHandler.setValueByPath("spring.datasource.password", dbmsPwd.getValue());
         appYamlHandler.writeMapToYamlinRessources();
         System.out.println("Write application yml file");
+
+        System.out.println("Restart the application");
+        Application.restart();
     }
 }

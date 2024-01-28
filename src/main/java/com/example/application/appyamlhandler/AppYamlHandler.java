@@ -21,7 +21,7 @@ public class AppYamlHandler {
     public void init() {
         yamlMap = readYamlFromRessources("application.yml");
         //Get a Parameter by path
-        var dburl = getValueByPath("spring.datasource.url");
+        //var dburl = getValueByPath("spring.datasource.url");
 
         //Simple add of a parameter
         yamlMap.put("timestamp", LocalDateTime.now().toString());
@@ -46,7 +46,7 @@ public class AppYamlHandler {
     }
 
 
-    private Object getValueByPath(String path) {
+    public Object getValueByPath(String path) {
         String[] p = path.split("\\.");
         Map<String, Object> currentMap = yamlMap;
         for (String key : p) {
