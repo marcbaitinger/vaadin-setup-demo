@@ -1,4 +1,4 @@
-package com.example.application.appyamlhandler;
+package com.example.application.applicationyamlhandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class AppYamlHandler {
+public class ApplicationYamlHandler {
 
     private Map<String, Object> yamlMap;
 
@@ -35,7 +35,7 @@ public class AppYamlHandler {
 
 
     private Map<String, Object> readYamlFromRessources(String file) {
-        InputStream inputStream = AppYamlHandler.class.getClassLoader().getResourceAsStream(file);
+        InputStream inputStream = ApplicationYamlHandler.class.getClassLoader().getResourceAsStream(file);
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         try {
             return objectMapper.readValue(inputStream, Map.class);
@@ -46,7 +46,7 @@ public class AppYamlHandler {
     }
 
 
-    public Object getValueByPath(String path) {
+    public Object getAt(String path) {
         String[] p = path.split("\\.");
         Map<String, Object> currentMap = yamlMap;
         for (String key : p) {
@@ -64,7 +64,7 @@ public class AppYamlHandler {
         return null;
     }
 
-    public void setValueByPath(String path, Object value) {
+    public void setAt(String path, Object value) {
         String[] p = path.split("\\.");
         Map<String, Object> currentMap = yamlMap;
         for (int i = 0; i < p.length; i++) {
@@ -80,11 +80,11 @@ public class AppYamlHandler {
         }
     }
 
-    public void writeMapToYamlinRessources() {
+    public void writeYamlToRessources() {
         String fileName = "application.yml";
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         try {
-            String resourcesPath = AppYamlHandler.class.getResource("/").getPath();
+            String resourcesPath = ApplicationYamlHandler.class.getResource("/").getPath();
             String filePath = resourcesPath + fileName;
             objectMapper.writeValue(new File(filePath), yamlMap);
         } catch (IOException e) {

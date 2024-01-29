@@ -1,7 +1,7 @@
 package com.example.application.views.setup;
 
 import com.example.application.Application;
-import com.example.application.appyamlhandler.AppYamlHandler;
+import com.example.application.applicationyamlhandler.ApplicationYamlHandler;
 import com.example.application.condition.SetupNotFinishedCondition;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -33,7 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
     @Autowired
-    private  AppYamlHandler         appYamlHandler;
+    private ApplicationYamlHandler applicationYamlHandler;
     private RadioButtonGroup<String> dbms;
     private TextField                username, dbmsURL, dbmsUsername;
     private PasswordField            pwd, pwdRepeat, dbmsPwd;
@@ -79,10 +79,10 @@ public class SetupView extends VerticalLayout {
         pwdRepeat = new PasswordField("Repeat Password");
         pwdSaveConfig = new Button("Save Admin-User");
         pwdSaveConfig.addClickListener(e ->{
-            var encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
-            appYamlHandler.setValueByPath("io.sapl.server.accesscontrol.admin-username", username.getValue());
-            appYamlHandler.setValueByPath("io.sapl.server.accesscontrol.encoded-admin-password", encoder.encode(pwd.getValue()));
-            appYamlHandler.writeMapToYamlinRessources();
+            PasswordEncoder encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+            applicationYamlHandler.setAt("io.sapl.server.accesscontrol.admin-username", username.getValue());
+            applicationYamlHandler.setAt("io.sapl.server.accesscontrol.encoded-admin-password", encoder.encode(pwd.getValue()));
+            applicationYamlHandler.writeYamlToRessources();
 
         });
         Span adminUserErrorMessage = new Span();
@@ -209,11 +209,11 @@ public class SetupView extends VerticalLayout {
             default:
         }
 
-        appYamlHandler.setValueByPath("spring.datasource.driverClassName", driverClassName);
-        appYamlHandler.setValueByPath("spring.datasource.url", "jdbc:h2:" + dbmsURL.getValue());
-        appYamlHandler.setValueByPath("spring.datasource.username", dbmsUsername.getValue());
-        appYamlHandler.setValueByPath("spring.datasource.password", dbmsPwd.getValue());
-        appYamlHandler.writeMapToYamlinRessources();
+        applicationYamlHandler.setAt("spring.datasource.driverClassName", driverClassName);
+        applicationYamlHandler.setAt("spring.datasource.url", "jdbc:h2:" + dbmsURL.getValue());
+        applicationYamlHandler.setAt("spring.datasource.username", dbmsUsername.getValue());
+        applicationYamlHandler.setAt("spring.datasource.password", dbmsPwd.getValue());
+        applicationYamlHandler.writeYamlToRessources();
         System.out.println("Write application yml file");
 
         System.out.println("Restart the application");
