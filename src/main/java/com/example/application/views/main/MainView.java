@@ -13,13 +13,13 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.context.annotation.Conditional;
 
 @PageTitle("Main")
-@Route(value = "/main")
+@Route(value = "")
 @Conditional(SetupFinishedCondition.class)
 @AnonymousAllowed
 public class MainView extends HorizontalLayout {
 
     private TextField name;
-    private Button sayHello, restart;
+    private Button sayHello;
 
     public MainView() {
         name = new TextField("Your name");
@@ -32,11 +32,7 @@ public class MainView extends HorizontalLayout {
         setMargin(true);
         setVerticalComponentAlignment(Alignment.END, name, sayHello);
 
-        restart = new Button("Restart Application");
-        restart.addClickListener(e -> Application.restart());
-
-
-        add(name, sayHello,restart);
+        add(name, sayHello);
     }
 
 }

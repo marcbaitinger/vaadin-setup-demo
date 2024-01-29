@@ -1,6 +1,7 @@
 package com.example.application;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.server.VaadinSession;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,6 +28,7 @@ public class Application implements AppShellConfigurator {
     public static ConfigurableApplicationContext context;
     public static void restart() {
         ApplicationArguments args = context.getBean(ApplicationArguments.class);
+        VaadinSession.getCurrent().getSession().invalidate();
         Thread thread = new Thread(() -> {
             context.close();
             context = SpringApplication.run(Application.class, args.getSourceArgs());

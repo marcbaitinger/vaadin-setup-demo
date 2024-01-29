@@ -22,13 +22,14 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
-@Route(value = "/setup")
+@Route(value = "")
 @Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
     @Autowired
@@ -36,7 +37,7 @@ public class SetupView extends VerticalLayout {
     private RadioButtonGroup<String> dbms;
     private TextField                username, dbmsURL, dbmsUsername;
     private PasswordField            pwd, pwdRepeat, dbmsPwd;
-    private Button                   dbmsTest, dbmsSaveConfig;
+    private Button                   pwdSaveConfig, dbmsTest, dbmsSaveConfig;
 
     public SetupView() {
         H2 title   = new H2("SAPL Server CE First-Time Boot Wizard");
@@ -76,16 +77,24 @@ public class SetupView extends VerticalLayout {
         username  = new TextField("Username");
         pwd       = new PasswordField("Password");
         pwdRepeat = new PasswordField("Repeat Password");
+        pwdSaveConfig = new Button("Save Admin-User");
+        pwdSaveConfig.addClickListener(e ->{
+            var encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+            appYamlHandler.setValueByPath("io.sapl.server.accesscontrol.admin-username", username.getValue());
+            appYamlHandler.setValueByPath("io.sapl.server.accesscontrol.encoded-admin-password", encoder.encode(pwd.getValue()));
+            appYamlHandler.writeMapToYamlinRessources();
 
+        });
         Span adminUserErrorMessage = new Span();
         adminUserErrorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
 
-        FormLayout adminUserLayout = new FormLayout(username, pwd, pwdRepeat);
+        FormLayout adminUserLayout = new FormLayout(username, pwd, pwdRepeat,pwdSaveConfig);
         adminUserLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
                 new FormLayout.ResponsiveStep("490px", 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
         adminUserLayout.setColspan(username, 2);
         adminUserLayout.setColspan(adminUserErrorMessage, 2);
+        adminUserLayout.setColspan(pwdSaveConfig, 2);
 
         return adminUserLayout;
     }
