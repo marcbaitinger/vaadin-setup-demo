@@ -15,3 +15,9 @@ logging:
             atmosphere: warn
 server:
     port: ${PORT:8080}
+
+io.sapl:
+    server:
+        accesscontrol:
+            encoded-admin-password: "$argon2id$v=19$m=16384,t=2,p=1$4paxgjEMXUrSjKeEEh3+7g$o7oeFzAaNtPSuM6kbEmK+1js2bLlpbqAcgYvImeEgsA"
+            admin-username: "user"

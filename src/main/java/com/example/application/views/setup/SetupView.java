@@ -29,7 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
-@Route(value = "")
+@Route(value = "/setup")
 @Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
     @Autowired
@@ -37,7 +37,7 @@ public class SetupView extends VerticalLayout {
     private RadioButtonGroup<String> dbms;
     private TextField                username, dbmsURL, dbmsUsername;
     private PasswordField            pwd, pwdRepeat, dbmsPwd;
-    private Button                   pwdSaveConfig, dbmsTest, dbmsSaveConfig;
+    private Button                   pwdSaveConfig, dbmsTest, dbmsSaveConfig, restart;
 
     public SetupView() {
         H2 title   = new H2("SAPL Server CE First-Time Boot Wizard");
@@ -50,8 +50,9 @@ public class SetupView extends VerticalLayout {
                 createAdminUserLayout());
         accordion.getStyle().setMargin("50px 0");
 
-        Button restart = new Button("Finish Setup-Wizard and restart");
+        restart = new Button("Finish Setup-Wizard and restart");
         restart.addClickListener(e -> Application.restart());
+        restart.setEnabled(false);
 
         Anchor help = new Anchor("https://github.com/heutelbeck/sapl-server",
                 "You need help? Have a look at the documentation.");
@@ -84,8 +85,8 @@ public class SetupView extends VerticalLayout {
         pwdSaveConfig = new Button("Save Admin-User");
         pwdSaveConfig.addClickListener(e ->{
             PasswordEncoder encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
-            applicationYamlHandler.setAt("io.sapl.server.accesscontrol.admin-username", username.getValue());
-            applicationYamlHandler.setAt("io.sapl.server.accesscontrol.encoded-admin-password", encoder.encode(pwd.getValue()));
+            applicationYamlHandler.setAt("io.sapl/server/accesscontrol/admin-username", username.getValue());
+            applicationYamlHandler.setAt("io.sapl/server/accesscontrol/encoded-admin-password", encoder.encode(pwd.getValue()));
             applicationYamlHandler.writeYamlToRessources();
 
         });
@@ -125,6 +126,9 @@ public class SetupView extends VerticalLayout {
         dbmsSaveConfig.setVisible(false);
         dbmsSaveConfig.addClickListener(e -> {
             writeDbmsConfigToApplicationYml();
+            if(!applicationYamlHandler.getAt("spring/datasource/url").toString().isEmpty()){
+                restart.setEnabled(true);
+            }
         });
         Span dbmsErrorMessage = new Span();
         dbmsErrorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
@@ -213,10 +217,10 @@ public class SetupView extends VerticalLayout {
             default:
         }
 
-        applicationYamlHandler.setAt("spring.datasource.driverClassName", driverClassName);
-        applicationYamlHandler.setAt("spring.datasource.url", "jdbc:h2:" + dbmsURL.getValue());
-        applicationYamlHandler.setAt("spring.datasource.username", dbmsUsername.getValue());
-        applicationYamlHandler.setAt("spring.datasource.password", dbmsPwd.getValue());
+        applicationYamlHandler.setAt("spring/datasource/driverClassName", driverClassName);
+        applicationYamlHandler.setAt("spring/datasource/url", "jdbc:h2:" + dbmsURL.getValue());
+        applicationYamlHandler.setAt("spring/datasource/username", dbmsUsername.getValue());
+        applicationYamlHandler.setAt("spring/datasource/password", dbmsPwd.getValue());
         applicationYamlHandler.writeYamlToRessources();
         System.out.println("Write application yml file");
     }

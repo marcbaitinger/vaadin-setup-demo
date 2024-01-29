@@ -47,7 +47,7 @@ public class ApplicationYamlHandler {
 
 
     public Object getAt(String path) {
-        String[] p = path.split("\\.");
+        String[] p = path.split("/");
         Map<String, Object> currentMap = yamlMap;
         for (String key : p) {
             if (currentMap.containsKey(key)) {
@@ -65,7 +65,7 @@ public class ApplicationYamlHandler {
     }
 
     public void setAt(String path, Object value) {
-        String[] p = path.split("\\.");
+        String[] p = path.split("/");
         Map<String, Object> currentMap = yamlMap;
         for (int i = 0; i < p.length; i++) {
             String key = p[i];

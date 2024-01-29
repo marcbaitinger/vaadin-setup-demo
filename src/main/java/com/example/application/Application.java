@@ -1,5 +1,6 @@
 package com.example.application;
 
+import com.example.application.applicationyamlhandler.ApplicationYamlHandler;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.server.VaadinSession;
 import org.springframework.boot.ApplicationArguments;
