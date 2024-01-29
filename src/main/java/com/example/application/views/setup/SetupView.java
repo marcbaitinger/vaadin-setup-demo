@@ -50,10 +50,13 @@ public class SetupView extends VerticalLayout {
                 createAdminUserLayout());
         accordion.getStyle().setMargin("50px 0");
 
+        Button restart = new Button("Finish Setup-Wizard and restart");
+        restart.addClickListener(e -> Application.restart());
+
         Anchor help = new Anchor("https://github.com/heutelbeck/sapl-server",
                 "You need help? Have a look at the documentation.");
 
-        FormLayout formLayout = new FormLayout(title, welcome, accordion, help);
+        FormLayout formLayout = new FormLayout(title, welcome, accordion, restart, help);
         // Restrict maximum width and center on page
         formLayout.setMaxWidth("800px");
         formLayout.getStyle().set("margin", "100px auto");
@@ -67,6 +70,7 @@ public class SetupView extends VerticalLayout {
         formLayout.setColspan(title, 2);
         formLayout.setColspan(welcome, 2);
         formLayout.setColspan(accordion, 2);
+        formLayout.setColspan(restart, 2);
         formLayout.setColspan(help, 2);
 
         add(formLayout);
@@ -215,9 +219,6 @@ public class SetupView extends VerticalLayout {
         applicationYamlHandler.setAt("spring.datasource.password", dbmsPwd.getValue());
         applicationYamlHandler.writeYamlToRessources();
         System.out.println("Write application yml file");
-
-        System.out.println("Restart the application");
-        Application.restart();
     }
 
     private void writeTlsConfigToApplicationYml() {

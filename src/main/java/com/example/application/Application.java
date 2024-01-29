@@ -8,13 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 
-/**
- * The entry point of the Spring Boot application.
- *
- * Use the @PWA annotation make the application installable on phones, tablets
- * and some desktop browsers.
- *
- */
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 public class Application implements AppShellConfigurator {
 
@@ -22,9 +15,6 @@ public class Application implements AppShellConfigurator {
         context = SpringApplication.run(Application.class, args);
     }
 
-
-    //Um Anwendung nach Änderungen in der application.yml neu zu starten
-    //Mal sehen, ob das nötig ist, da nach auch nach Änderungen in der application.yml die Anwendung scheinbar neu gestartet wird
     public static ConfigurableApplicationContext context;
     public static void restart() {
         ApplicationArguments args = context.getBean(ApplicationArguments.class);
