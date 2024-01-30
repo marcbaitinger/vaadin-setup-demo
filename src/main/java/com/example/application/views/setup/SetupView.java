@@ -29,7 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
-@Route(value = "/setup")
+@Route(value = "")
 @Conditional(SetupNotFinishedCondition.class)
 public class SetupView extends VerticalLayout {
     @Autowired

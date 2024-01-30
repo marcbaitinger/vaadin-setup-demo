@@ -24,7 +24,7 @@ public class ApplicationYamlHandler {
         //var dburl = getValueByPath("spring.datasource.url");
 
         //Simple add of a parameter
-        yamlMap.put("timestamp", LocalDateTime.now().toString());
+        //yamlMap.put("timestamp", LocalDateTime.now().toString());
 
         //Set a parameter
         //setValueByPath("spring.datasource.url", "test");
