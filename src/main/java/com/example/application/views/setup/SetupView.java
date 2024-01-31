@@ -26,6 +26,9 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @AnonymousAllowed
 @PageTitle("SAPL Server CE First-Time Boot Wizard")
@@ -38,6 +41,9 @@ public class SetupView extends VerticalLayout {
     private TextField                username, dbmsURL, dbmsUsername;
     private PasswordField            pwd, pwdRepeat, dbmsPwd;
     private Button                   pwdSaveConfig, dbmsTest, dbmsSaveConfig, restart;
+
+    private Span adminUserErrorMessage;
+    private boolean enablePasswordCheck;
 
     public SetupView() {
         H2 title   = new H2("SAPL Server CE First-Time Boot Wizard");
@@ -83,6 +89,7 @@ public class SetupView extends VerticalLayout {
         pwd       = new PasswordField("Password");
         pwdRepeat = new PasswordField("Repeat Password");
         pwdSaveConfig = new Button("Save Admin-User");
+        pwdSaveConfig.setEnabled(false);
         pwdSaveConfig.addClickListener(e ->{
             PasswordEncoder encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
             applicationYamlHandler.setAt("io.sapl/server/accesscontrol/admin-username", username.getValue());
@@ -90,10 +97,19 @@ public class SetupView extends VerticalLayout {
             applicationYamlHandler.writeYamlToRessources();
 
         });
-        Span adminUserErrorMessage = new Span();
+
+        adminUserErrorMessage = new Span("");
+        adminUserErrorMessage.setVisible(false);
         adminUserErrorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
 
-        FormLayout adminUserLayout = new FormLayout(username, pwd, pwdRepeat,pwdSaveConfig);
+        username.addValueChangeListener(e -> validateAdminUser());
+        pwd.addValueChangeListener(e -> validateAdminUser());
+        pwdRepeat.addValueChangeListener(e -> {
+            enablePasswordCheck = true;
+            validateAdminUser();});
+        enablePasswordCheck = false;
+
+        FormLayout adminUserLayout = new FormLayout(username, pwd, pwdRepeat,adminUserErrorMessage, pwdSaveConfig);
         adminUserLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 1, FormLayout.ResponsiveStep.LabelsPosition.TOP),
                 new FormLayout.ResponsiveStep("490px", 2, FormLayout.ResponsiveStep.LabelsPosition.TOP));
@@ -102,6 +118,25 @@ public class SetupView extends VerticalLayout {
         adminUserLayout.setColspan(pwdSaveConfig, 2);
 
         return adminUserLayout;
+    }
+
+    private void validateAdminUser(){
+        List<String> errors = new ArrayList<>();
+        if(username.getValue().isBlank()){
+            errors.add("Username has to be set");
+        }
+        if(enablePasswordCheck && !pwd.getValue().isEmpty() && !pwdRepeat.getValue().isEmpty()  && !pwd.getValue().equals(pwdRepeat.getValue())){
+            errors.add("Passwords do not match");
+        }
+        if(!errors.isEmpty() && !pwd.getValue().isEmpty()){
+            adminUserErrorMessage.getElement().setProperty("innerHTML", String.join( "<br />",errors));
+            adminUserErrorMessage.setVisible(true);
+            pwdSaveConfig.setEnabled(false);
+        }
+        else{
+            adminUserErrorMessage.setVisible(false);
+            pwdSaveConfig.setEnabled(true);
+        }
     }
 
     private Component createDbmsLayout() {
@@ -175,9 +210,7 @@ public class SetupView extends VerticalLayout {
         add(checkboxGroup);
 
         Button tlsSaveConfig = new Button("Save TLS Configuration");
-        tlsSaveConfig.addClickListener(e -> {
-            writeTlsConfigToApplicationYml();
-        });
+        tlsSaveConfig.addClickListener(e -> writeTlsConfigToApplicationYml());
 
         //TODO keystore configuration (type, path, password, alias)
 
