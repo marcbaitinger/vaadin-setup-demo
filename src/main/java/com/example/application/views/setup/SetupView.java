@@ -6,21 +6,18 @@ import com.example.application.condition.SetupNotFinishedCondition;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.checkbox.CheckboxGroup;
-import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -37,11 +34,12 @@ import java.util.List;
 public class SetupView extends VerticalLayout {
     @Autowired
     private ApplicationYamlHandler applicationYamlHandler;
-    private RadioButtonGroup<String> dbms;
-    private TextField                username, dbmsURL, dbmsUsername;
-    private PasswordField            pwd, pwdRepeat, dbmsPwd;
-    private Button                   pwdSaveConfig, dbmsTest, dbmsSaveConfig, restart;
 
+    private DbmsSetupView dbmsSetupView;
+    private HttpEndpointSetupView httpEndpointSetupView;
+    private TextField                username;
+    private PasswordField            pwd, pwdRepeat;
+    private Button                   pwdSaveConfig, restart;
     private Span adminUserErrorMessage;
     private boolean enablePasswordCheck;
 
@@ -49,9 +47,12 @@ public class SetupView extends VerticalLayout {
         H2 title   = new H2("SAPL Server CE First-Time Boot Wizard");
         H6 welcome = new H6("Welcome to SAPL Server CE. Finish the following steps to setup the SAPL Server CE");
 
+        dbmsSetupView = new DbmsSetupView();
+        httpEndpointSetupView = new HttpEndpointSetupView();
+
         Accordion      accordion      = new Accordion();
-        accordion.add("Setup your DBMS", createDbmsLayout());
-        accordion.add("TLS Configuration", createTLSLayout());
+        accordion.add(DbmsSetupView.TITLE, dbmsSetupView.getLayout());
+        accordion.add(HttpEndpointSetupView.TITLE, httpEndpointSetupView.getLayout());
         accordion.add("Set username and password for the admin-user",
                 createAdminUserLayout());
         accordion.getStyle().setMargin("50px 0");
@@ -81,6 +82,14 @@ public class SetupView extends VerticalLayout {
         formLayout.setColspan(help, 2);
 
         add(formLayout);
+    }
+
+    @PostConstruct
+    public void init() {
+        dbmsSetupView.setApplicationYamlHandler(applicationYamlHandler);
+        dbmsSetupView.setButtonRestart(restart);
+
+        httpEndpointSetupView.setApplicationYamlHandler(applicationYamlHandler);
     }
 
     private Component createAdminUserLayout() {
@@ -137,128 +146,5 @@ public class SetupView extends VerticalLayout {
             adminUserErrorMessage.setVisible(false);
             pwdSaveConfig.setEnabled(true);
         }
-    }
-
-    private Component createDbmsLayout() {
-        dbms = new RadioButtonGroup<>("DBMS");
-        dbms.setItems("H2", "MariaDB");
-        dbms.addValueChangeListener(e -> setDbmsConnStringDefault());
-        dbmsURL = new TextField("DBMS URL");
-        dbmsURL.setRequiredIndicatorVisible(true);
-        dbmsURL.setClearButtonVisible(true);
-        dbmsURL.setVisible(false);
-        dbmsUsername = new TextField("DBMS Username");
-        dbmsUsername.setRequiredIndicatorVisible(true);
-        dbmsUsername.setClearButtonVisible(true);
-        dbmsUsername.setVisible(false);
-        dbmsPwd = new PasswordField("DBMS Password");
-        dbmsPwd.setRequiredIndicatorVisible(true);
-        dbmsPwd.setClearButtonVisible(true);
-        dbmsPwd.setVisible(false);
-        dbmsTest = new Button("Test DBMS-Connection");
-        dbmsTest.setVisible(false);
-        dbmsSaveConfig = new Button("Save DBMS-Configuration");
-        dbmsSaveConfig.setVisible(false);
-        dbmsSaveConfig.addClickListener(e -> {
-            writeDbmsConfigToApplicationYml();
-            if(!applicationYamlHandler.getAt("spring/datasource/url").toString().isEmpty()){
-                restart.setEnabled(true);
-            }
-        });
-        Span dbmsErrorMessage = new Span();
-        dbmsErrorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
-        dbmsErrorMessage.getStyle().set("padding", "var(--lumo-space-tall-l)");
-
-        FormLayout dbmsLayout = new FormLayout(dbms, dbmsURL, dbmsUsername, dbmsPwd, dbmsErrorMessage, dbmsTest, dbmsSaveConfig);
-        dbmsLayout.setColspan(dbms, 2);
-        dbmsLayout.setColspan(dbmsURL, 2);
-        dbmsLayout.setColspan(dbmsSaveConfig, 2);
-        dbmsLayout.setColspan(dbmsTest, 2);
-        dbmsLayout.setColspan(dbmsErrorMessage, 2);
-
-        return dbmsLayout;
-    }
-
-    private Component createTLSLayout() {
-        ListBox<String> listBox = new ListBox<>();
-        listBox.setItems("TLSv1.3", "TLSv1.3 + TLSv1.2");
-        listBox.setValue("TLSv1.3");
-
-        CheckboxGroup<String> checkboxGroup = new CheckboxGroup<>();
-        checkboxGroup.setLabel("TLS ciphers");
-        checkboxGroup.setItems("TLS_AES_128_GCM_SHA256",
-                "TLS_AES_256_GCM_SHA384",
-                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-                "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-                "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-                "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
-                "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
-                "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
-                "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
-                "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
-                "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
-                "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
-                "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
-                "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
-                "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
-                "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
-                "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256");
-
-        checkboxGroup.select("TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384");
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
-        add(checkboxGroup);
-
-        Button tlsSaveConfig = new Button("Save TLS Configuration");
-        tlsSaveConfig.addClickListener(e -> writeTlsConfigToApplicationYml());
-
-        //TODO keystore configuration (type, path, password, alias)
-
-        FormLayout tlsLayout = new FormLayout(listBox, checkboxGroup, tlsSaveConfig);
-        tlsLayout.setColspan(listBox, 2);
-        tlsLayout.setColspan(checkboxGroup, 2);
-        tlsLayout.setColspan(tlsSaveConfig, 2);
-
-        return tlsLayout;
-    }
-
-    private void setDbmsConnStringDefault() {
-        switch (dbms.getValue()) {
-            case "H2":
-                dbmsURL.setValue("file:~/sapl/db");
-                break;
-            case "MariaDB":
-                dbmsURL.setValue("localhost:3306/saplserver");
-                break;
-            default:
-        }
-        dbmsURL.setVisible(true);
-        dbmsUsername.setVisible(true);
-        dbmsPwd.setVisible(true);
-        dbmsSaveConfig.setVisible(true);
-        dbmsSaveConfig.setEnabled(true);
-    }
-
-    private void writeDbmsConfigToApplicationYml() {
-        String driverClassName = "";
-        switch (dbms.getValue()) {
-            case "H2":
-                driverClassName = "org.h2.Driver";
-                break;
-            case "MariaDB":
-                break;
-            default:
-        }
-
-        applicationYamlHandler.setAt("spring/datasource/driverClassName", driverClassName);
-        applicationYamlHandler.setAt("spring/datasource/url", "jdbc:h2:" + dbmsURL.getValue());
-        applicationYamlHandler.setAt("spring/datasource/username", dbmsUsername.getValue());
-        applicationYamlHandler.setAt("spring/datasource/password", dbmsPwd.getValue());
-        applicationYamlHandler.writeYamlToRessources();
-        System.out.println("Write application yml file");
-    }
-
-    private void writeTlsConfigToApplicationYml() {
-        System.out.println("Needs to be implemented: Write tls config to application.yml");
     }
 }
