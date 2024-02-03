@@ -1,6 +1,7 @@
 package com.example.application.views.setup;
 
 import com.example.application.applicationyamlhandler.ApplicationYamlHandler;
+import com.example.application.dbms.H2ConnectionTest;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -11,6 +12,7 @@ import com.vaadin.flow.component.textfield.TextField;
 
 public class DbmsSetupView {
     public static final String TITLE = "Setup your DBMS";
+    private static final String H2_DRIVER = "org.h2.Driver";
 
     private ApplicationYamlHandler applicationYamlHandler;
 
@@ -40,7 +42,8 @@ public class DbmsSetupView {
         dbmsPwd.setClearButtonVisible(true);
         dbmsPwd.setVisible(false);
         dbmsTest = new Button("Test DBMS-Connection");
-        dbmsTest.setVisible(false);
+        dbmsTest.setVisible(true);
+        dbmsTest.addClickListener(e -> H2ConnectionTest.run(dbmsURL.getValue(), H2_DRIVER));
         dbmsSaveConfig = new Button("Save DBMS-Configuration");
         dbmsSaveConfig.setVisible(false);
         dbmsSaveConfig.addClickListener(e -> {
@@ -84,7 +87,7 @@ public class DbmsSetupView {
         String driverClassName = "";
         switch (dbms.getValue()) {
             case "H2":
-                driverClassName = "org.h2.Driver";
+                driverClassName = H2_DRIVER;
                 break;
             case "MariaDB":
                 break;
