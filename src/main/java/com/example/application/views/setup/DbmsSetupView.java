@@ -66,7 +66,7 @@ public class DbmsSetupView {
     private void setDbmsConnStringDefault() {
         switch (dbms.getValue()) {
             case "H2":
-                dbmsURL.setValue("file:~/sapl/db");
+                dbmsURL.setValue("jdbc:h2:file:~/sapl/db");
                 break;
             case "MariaDB":
                 dbmsURL.setValue("localhost:3306/saplserver");
@@ -92,7 +92,7 @@ public class DbmsSetupView {
         }
 
         applicationYamlHandler.setAt("spring/datasource/driverClassName", driverClassName);
-        applicationYamlHandler.setAt("spring/datasource/url", "jdbc:h2:" + dbmsURL.getValue());
+        applicationYamlHandler.setAt("spring/datasource/url", dbmsURL.getValue());
         applicationYamlHandler.setAt("spring/datasource/username", dbmsUsername.getValue());
         applicationYamlHandler.setAt("spring/datasource/password", dbmsPwd.getValue());
         applicationYamlHandler.writeYamlToRessources();
