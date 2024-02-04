@@ -3,12 +3,22 @@ package com.example.application.views.setup;
 import com.example.application.applicationyamlhandler.ApplicationYamlHandler;
 import com.example.application.dbms.H2ConnectionTest;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+
+import java.sql.SQLException;
 
 public class DbmsSetupView {
     public static final String TITLE = "Setup your DBMS";
@@ -33,19 +43,22 @@ public class DbmsSetupView {
         dbmsURL.setRequiredIndicatorVisible(true);
         dbmsURL.setClearButtonVisible(true);
         dbmsURL.setVisible(false);
+        dbmsURL.addValueChangeListener(e -> setSaveButtonDisable());
         dbmsUsername = new TextField("DBMS Username");
         dbmsUsername.setRequiredIndicatorVisible(true);
         dbmsUsername.setClearButtonVisible(true);
         dbmsUsername.setVisible(false);
+        dbmsUsername.addValueChangeListener(e -> setSaveButtonDisable());
         dbmsPwd = new PasswordField("DBMS Password");
         dbmsPwd.setRequiredIndicatorVisible(true);
         dbmsPwd.setClearButtonVisible(true);
         dbmsPwd.setVisible(false);
+        dbmsPwd.addValueChangeListener(e -> setSaveButtonDisable());
         dbmsTest = new Button("Test DBMS-Connection");
         dbmsTest.setVisible(true);
-        dbmsTest.addClickListener(e -> H2ConnectionTest.run(dbmsURL.getValue(), H2_DRIVER));
+        dbmsTest.addClickListener(e -> dbmsConnectionTest());
         dbmsSaveConfig = new Button("Save DBMS-Configuration");
-        dbmsSaveConfig.setVisible(false);
+        dbmsSaveConfig.setVisible(true);
         dbmsSaveConfig.addClickListener(e -> {
             writeDbmsConfigToApplicationYml();
             if(!applicationYamlHandler.getAt("spring/datasource/url").toString().isEmpty()){
@@ -66,6 +79,10 @@ public class DbmsSetupView {
         return dbmsLayout;
     }
 
+    private void setSaveButtonDisable() {
+        dbmsSaveConfig.setEnabled(false);
+    }
+
     private void setDbmsConnStringDefault() {
         switch (dbms.getValue()) {
             case "H2":
@@ -79,8 +96,7 @@ public class DbmsSetupView {
         dbmsURL.setVisible(true);
         dbmsUsername.setVisible(true);
         dbmsPwd.setVisible(true);
-        dbmsSaveConfig.setVisible(true);
-        dbmsSaveConfig.setEnabled(true);
+        dbmsSaveConfig.setEnabled(false);
     }
 
     private void writeDbmsConfigToApplicationYml() {
@@ -101,6 +117,38 @@ public class DbmsSetupView {
         applicationYamlHandler.writeYamlToRessources();
 
         System.out.println("Write application yml file");
+    }
+
+    private void dbmsConnectionTest() {
+        try {
+            H2ConnectionTest.run(dbmsURL.getValue());
+            dbmsSaveConfig.setEnabled(true);
+            connectionTestNotification(NotificationVariant.LUMO_SUCCESS, "Connection test succeeded");
+        } catch (SQLException e) {
+            dbmsSaveConfig.setEnabled(false);
+            connectionTestNotification(NotificationVariant.LUMO_ERROR, e.toString());
+        }
+    }
+
+    private void connectionTestNotification(NotificationVariant var, String msg) {
+        Notification notification = new Notification();
+        notification.addThemeVariants(var);
+
+        Div text = new Div(new Text(msg));
+
+        Button closeButton = new Button(new Icon("lumo", "cross"));
+        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.setAriaLabel("Close");
+        closeButton.addClickListener(event -> {
+            notification.close();
+        });
+
+        HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        notification.add(layout);
+        notification.setPosition(Notification.Position.MIDDLE);
+        notification.open();
     }
 
     public void setButtonRestart(Button restart) {
